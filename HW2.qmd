@@ -76,7 +76,6 @@ san_bern_county <- ejscreen %>%
 #### Make a map of neighborhoods colored by HOLC grades
 ```{r}
 # Use tmap package to make holc map
-tmap_mode("plot")
 
 tm_shape(los_ang_county, bbox = la_red) +
   tm_polygons(col = "#FEF8EB") +
