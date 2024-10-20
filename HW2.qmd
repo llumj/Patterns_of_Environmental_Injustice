@@ -14,6 +14,57 @@ editor_options:
 
 ## Part 1: Legacy of redlining in current environmental (in)justice
 
+#### Load Packages and Read Data
+
+```{r}
+library(sf)
+library(tidyverse)
+library(tmap)
+library(stars)
+library(kableExtra)
+library(here)
+```
+
+#### Read in data
+```{r}
+# Read in data with here
+la_red <- st_read(here::here("data", "mapping-inequality", "mapping-inequality-los-angeles.json")) %>% 
+  st_make_valid()
+
+# Read in bird biodiversity data
+birds <- st_read(here::here("data", "gbif-birds-LA", "gbif-birds-LA.shp"))
+
+# Read in ejscreen data
+ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"))
+
+```
+
+#### Check the coordinate system 
+```{r}
+# Use st_crs to check coordinate systems 
+st_crs(birds) == st_crs(la_red)
+st_crs(la_red) == st_crs(ejscreen)
+st_crs(ejscreen) == st_crs(birds)
+```
+
+#### Transform coordinate system to match 
+```{r}
+ejscreen <- st_transform(ejscreen, crs = st_crs(la_red))
+```
+
+#### Check the coordinate system again 
+```{r}
+# Use st_crs to check coordinate systems 
+st_crs(birds) == st_crs(la_red)
+st_crs(la_red) == st_crs(ejscreen)
+st_crs(ejscreen) == st_crs(birds)
+```
+
+#### Make a map of neighborhoods colored by HOLC grades
+```{r}
+tm_shape()
+```
+
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
