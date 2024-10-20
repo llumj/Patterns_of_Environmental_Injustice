@@ -60,9 +60,44 @@ st_crs(la_red) == st_crs(ejscreen)
 st_crs(ejscreen) == st_crs(birds)
 ```
 
+#### Filter ejscreen data counties that make our base map
+```{r}
+# Use filter to filter data for LA, Orange, and San Bernardino Counties 
+los_ang_county <- ejscreen %>%
+filter(CNTY_NAME == "Los Angeles County")
+
+orange_county <- ejscreen %>% 
+  filter(CNTY_NAME == "Orange County")
+
+san_bern_county <- ejscreen %>% 
+  filter(CNTY_NAME == "San Bernardino County")
+```
+
 #### Make a map of neighborhoods colored by HOLC grades
 ```{r}
-tm_shape()
+# Use tmap package to make holc map
+tmap_mode("plot")
+
+tm_shape(los_ang_county, bbox = la_red) +
+  tm_polygons(col = "#FEF8EB") +
+  tm_shape(la_red) + 
+  tm_polygons("grade", palette = c("#B3E4FF", "#02B0C0","#FDE996","#FE9F6C"), title = "HOLC Grade") +
+  tm_shape(san_bern_county) +
+  tm_polygons(col = "#FEF8EB") +
+  tm_shape(orange_county) +
+  tm_polygons(col = "#FEF8EB") +
+  tm_layout(
+    legend.title.size = .9,
+    legend.text.size = .4,
+    legend.position = c("right", "bottom"),
+    legend.bg.color = "white",
+    legend.bg.alpha = 1,
+    legend.frame = FALSE,
+    inner.margins = c(0.01, .045, 0, .045),
+    outer.margins = c(0, 0, 0, 0),
+    bg.color = "skyblue")
+
+
 ```
 
 
