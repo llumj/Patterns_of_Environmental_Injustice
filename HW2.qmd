@@ -3,11 +3,13 @@ title: "Homework Assignment #2"
 subtitle: "Exploring patterns of environmental justice"
 author: "Joshua Mull"
 date: last-modified
-execute: 
-  eval: false
+execute:
+  warning: false
+  message: false
 format:
   html:
     toc: true
+    code-fold: true
 editor_options: 
   chunk_output_type: console
 ---
@@ -24,6 +26,7 @@ library(stars)
 library(kableExtra)
 library(here)
 library(dplyr)
+library(tidyr)
 ```
 
 #### Read in data
@@ -50,6 +53,7 @@ st_crs(ejscreen) == st_crs(birds)
 
 #### Transform coordinate system to match 
 ```{r}
+# Transform la_red to match ejscreen coordinate system 
 ejscreen <- st_transform(ejscreen, crs = st_crs(la_red))
 ```
 
@@ -77,7 +81,7 @@ san_bern_county <- ejscreen %>%
 #### Make a map of neighborhoods colored by HOLC grades
 ```{r}
 # Use tmap package to make holc map
-tm_shape(los_ang_county, bbox = la_red) +
+holc_map_la <- tm_shape(los_ang_county, bbox = la_red) +
   tm_polygons(col = "white") +
   tm_shape(la_red) + 
   tm_polygons("grade", palette = c("#B3E4FF", "#02B0C0","#FDE996","#FE9F6C"), title = "HOLC Grade") +
@@ -96,28 +100,26 @@ tm_shape(los_ang_county, bbox = la_red) +
     legend.bg.color = NA,
     legend.bg.alpha = .7,
     bg.color = "white")
+
+print(holc_map_la)
 ```
 
 #### A table summarizing the percent of current census block groups within each HOLC grade (or none)
 
-```{r}
-library(dplyr)
+```{r, eval}
 # Calculate the percent of census block groups within each HOLC grade
-summary_table <- la_red %>%
+summary_holc <- la_red %>%
   group_by(grade) %>%
   summarise(count = n()) %>%
   mutate(percent = round((count / sum(count)) * 100, 2)) %>%
-  st_drop_geometry()
+  st_drop_geometry() %>%
+  select(-count)
 
 # Create the table with kableExtra
-summary_table %>%
-  kable(col.names = c("HOLC Grade", "Count", "Percent (%)"),
-        format = "html") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-                full_width = F,
-                position = "left")
-# Print the summary table
-print(summary_table)
+  knitr::kable(summary_holc,
+        col.names = c("HOLC Grade", "% of Census Block"),
+        format = "markdown",
+        caption = "Percentage of Current Census Block Groups Within HOLC Grade")
 
 ```
 
@@ -126,10 +128,12 @@ print(summary_table)
 - percentile for Particulate Matter 2.5
 - percentile for low life expectancy
 
+#### Join data. Filter data for making a table and graph
 ```{r}
 # Spatial join data 
 joined_data <- st_join(los_ang_county, la_red, join = st_within)
 
+# Filter, Select and summarize columns for mean. Group by grade
 holc_mean_filter <- joined_data %>% 
   filter(!is.na(grade)) %>%
   select(LOWINCPCT, D5_PM25, LIFEEXPPCT, grade) %>%
@@ -138,17 +142,38 @@ holc_mean_filter <- joined_data %>%
                    list(mean = ~ round(mean(.x, na.rm = TRUE), 2)),
                         .names = "mean_{col}")) %>%
   mutate(mean_LOWINCPCT = mean_LOWINCPCT * 100) %>%
-  mutate(mean_LIFEEXPPCT = mean_LIFEEXPPCT * 100)
+  mutate(mean_LIFEEXPPCT = mean_LIFEEXPPCT * 100) %>% 
+  st_drop_geometry()
+```
 
+#### Make data long and plot it with geom_bar
+```{r}
+# Gather data into long format
+long_data_holc_mean <- holc_mean_filter %>%
+  pivot_longer(cols = c(mean_LOWINCPCT, mean_D5_PM25, mean_LIFEEXPPCT), names_to = "variable", values_to = "value")
+
+# Create the bar graph
+holc_map_mean <- ggplot(long_data_holc_mean, aes(x = grade, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(
+    values = c("mean_D5_PM25" = "#388697", "mean_LOWINCPCT" = "#08415C", "mean_LIFEEXPPCT" = "#B5FFE1"),
+    labels = c("mean_D5_PM25" = "Mean Percent PM 2.5", "mean_LIFEEXPPCT" = "Mean Percent Low Life Expectency", "mean_LOWINCPCT" = "Mean % Low Income")) +
+  labs(title = "Environmental and Social Conditions Across HOLC Grades", x = "Grade", y = "Percentage") +
+  theme_minimal() + 
+  theme(legend.title = element_blank())
+
+# Print
+print(holc_map_mean)
+```
+
+#### Create table of mean values with kable
+```{r}
 # Create mean table with kableExtra
-holc_mean_table <- holc_mean_filter %>%
-  kable(col.names = c("Grade", "Mean % Low Income", "Mean Percentile PM25", "Mean Percent Life Expectency", "Shape"),
-        format = "html") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-                full_width = F,
-                position = "left")
+  kable(holc_mean_filter,
+        caption = "Environmental and Social Conditions Across HOLC Grades",
+        col.names = c("Grade", "Mean % Low Income", "Mean Percent PM25", "Mean Percent Low Life Expectency"),
+        format = "markdown")  
 
-print(holc_mean_table)
 ```
 
 #### A paragraph reflecting on these results
