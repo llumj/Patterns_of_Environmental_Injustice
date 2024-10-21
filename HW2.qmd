@@ -23,6 +23,7 @@ library(tmap)
 library(stars)
 library(kableExtra)
 library(here)
+library(dplyr)
 ```
 
 #### Read in data
@@ -76,30 +77,87 @@ san_bern_county <- ejscreen %>%
 #### Make a map of neighborhoods colored by HOLC grades
 ```{r}
 # Use tmap package to make holc map
-
 tm_shape(los_ang_county, bbox = la_red) +
-  tm_polygons(col = "#FEF8EB") +
+  tm_polygons(col = "white") +
   tm_shape(la_red) + 
   tm_polygons("grade", palette = c("#B3E4FF", "#02B0C0","#FDE996","#FE9F6C"), title = "HOLC Grade") +
   tm_shape(san_bern_county) +
-  tm_polygons(col = "#FEF8EB") +
+  tm_polygons(col = "white") +
   tm_shape(orange_county) +
-  tm_polygons(col = "#FEF8EB") +
+  tm_polygons(col = "white") +
   tm_layout(
+    title = "HOLC Grades Within LA County",
+    title.fontfamily = "serif",
+    title.fontface = "bold",
+    title.position = c(.61, .95),
     legend.title.size = .9,
     legend.text.size = .4,
-    legend.position = c("right", "bottom"),
-    legend.bg.color = "white",
-    legend.bg.alpha = 1,
-    legend.frame = FALSE,
-    inner.margins = c(0.01, .045, 0, .045),
-    outer.margins = c(0, 0, 0, 0),
-    bg.color = "skyblue")
+    legend.position = c(".05", "05"),
+    legend.bg.color = NA,
+    legend.bg.alpha = .7,
+    bg.color = "white")
+```
 
+#### A table summarizing the percent of current census block groups within each HOLC grade (or none)
+
+```{r}
+library(dplyr)
+# Calculate the percent of census block groups within each HOLC grade
+summary_table <- la_red %>%
+  group_by(grade) %>%
+  summarise(count = n()) %>%
+  mutate(percent = round((count / sum(count)) * 100, 2)) %>%
+  st_drop_geometry()
+
+# Create the table with kableExtra
+summary_table %>%
+  kable(col.names = c("HOLC Grade", "Count", "Percent (%)"),
+        format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F,
+                position = "left")
+# Print the summary table
+print(summary_table)
 
 ```
 
+#### A set of figures summarizing current conditions (from the EJScreen data) within HOLC grades using the mean of the following variables:% 
+- low income
+- percentile for Particulate Matter 2.5
+- percentile for low life expectancy
+
+```{r}
+# Spatial join data 
+joined_data <- st_join(los_ang_county, la_red, join = st_within)
+
+holc_mean_filter <- joined_data %>% 
+  filter(!is.na(grade)) %>%
+  select(LOWINCPCT, D5_PM25, LIFEEXPPCT, grade) %>%
+  group_by(grade) %>% 
+  summarise(across(c(LOWINCPCT, D5_PM25, LIFEEXPPCT), 
+                   list(mean = ~ round(mean(.x, na.rm = TRUE), 2)),
+                        .names = "mean_{col}")) %>%
+  mutate(mean_LOWINCPCT = mean_LOWINCPCT * 100) %>%
+  mutate(mean_LIFEEXPPCT = mean_LIFEEXPPCT * 100)
+
+# Create mean table with kableExtra
+holc_mean_table <- holc_mean_filter %>%
+  kable(col.names = c("Grade", "Mean % Low Income", "Mean Percentile PM25", "Mean Percent Life Expectency", "Shape"),
+        format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = F,
+                position = "left")
+
+print(holc_mean_table)
+```
+
+#### A paragraph reflecting on these results
+
+The table shows each Grades A-D, a rating system ranked from best to poorest based on their perceived safety for real estate investment. The table shows a clear connection between the three means we selected. As the grade decreases from A to D, the mean percentage of low income, percentile of PM 2.5, percent of the population with a low life expectancy all go up. This shows that neighborhoods in the D sections, almost always occupied by minorities, suffered in all of these categories due to redlining. 
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
+```{r}
+
+```
 
