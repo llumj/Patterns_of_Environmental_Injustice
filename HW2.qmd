@@ -168,8 +168,8 @@ summary_holc <- la_red_ej_join %>%
 
 ```
 
-#### A set of figures summarizing current conditions (from the EJScreen data) within HOLC grades using the mean of the following variables:% 
-- low income
+#### A set of figures summarizing current conditions (from the EJScreen data) within HOLC grades using the mean of the following variables: 
+- % low income
 - percentile for Particulate Matter 2.5
 - percentile for low life expectancy
 
@@ -235,7 +235,7 @@ holc_mean_filter$mean_P_PM25 <- round(holc_mean_filter$mean_P_PM25, 0)
         caption = "Environmental and Social Conditions Across HOLC Grades",
         col.names = c("Grade", "Mean % Low Income", 
                       "Mean Percent PM25", 
-                      "Mean Percent Low Life Expectency"),
+                      "Mean Percentile Low Life Expectency"),
         format = "markdown")
 
 ```
