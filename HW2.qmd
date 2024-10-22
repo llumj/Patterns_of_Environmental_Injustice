@@ -31,10 +31,12 @@ library(dplyr)
 library(tidyr)
 library(patchwork)
 library(knitr)
+library(gganimate)
 ```
 
 #### Read in data
 ```{r}
+
 # Read in data with here
 la_red <- st_read(here::here("data", "mapping-inequality", "mapping-inequality-los-angeles.json"), quiet = TRUE) %>% 
   st_make_valid()
@@ -50,15 +52,16 @@ ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_wi
 #### Check the coordinate system 
 ```{r}
 #| warning: true
-# Create a vector with the CRSs
-crs_vector <- c(st_crs(ejscreen), st_crs(la_red), st_crs(birds))
 
-# Check if all CRSs are equal to each other
-if (length(unique(crs_vector)) > 1) {
-  warning("Warning: Not all CRSs are equal! Consider transforming the data")
+# Create a warming message that compares each data frame's geometry. Use if() to create warning message that will let you know if the boolean values, when comparing CRS's, is false 
+if (!(st_crs(ejscreen) == st_crs(birds) &&
+      st_crs(birds) == st_crs(la_red) &&
+      st_crs(la_red) == st_crs(ejscreen))) {
+  warning("CRS do not match! Consider transforming!")
 } else {
-  print("All good: All CRSs match")
+  message("All CRS match")
 }
+
 ```
 
 #### Transform coordinate system for ejscreen to match la_red
@@ -71,12 +74,15 @@ ejscreen <- st_transform(ejscreen, crs = st_crs(la_red))
 ```{r}
 #| warning: true
 
-# Check if all CRSs are equal to each other
-if (length(unique(crs_vector)) > 1) {
-  warning("Warning: Not all CRSs are equal! Consider transforming the data")
+# Use same if statement to check for after transforming 
+if (!(st_crs(ejscreen) == st_crs(birds) &
+      st_crs(birds) == st_crs(la_red) &&
+      st_crs(la_red) == st_crs(ejscreen))) {
+  warning("CRS do not match! Consider transforming")
 } else {
-  print("All good: All CRSs match")
+  message("All CRS match")
 }
+
 ```
 
 #### Filter ejscreen data counties that make our base map
@@ -139,7 +145,7 @@ print(holc_map_la)
 #### A table summarizing the percent of current census block groups within each HOLC grade (or none)
 
 ```{r}
-# Join la_red and los_ang_county data wiith with st_intersects to see what percentage of current census block groups are within each HOLC grade 
+# Join la_red and los_ang_county data with st_intersects to see what percentage of current census block groups are within each HOLC grade 
 la_red_ej_join <- st_join(los_ang_county, la_red, st_intersects, left = FALSE)
 
 
@@ -157,7 +163,7 @@ summary_holc <- la_red_ej_join %>%
         format = "markdown",
         caption = "Percentage of Current Census Block Groups Within HOLC Grade") %>% 
     kable_styling(full_width = FALSE,
-                  position = "center")
+                  position = "float_left")
      
 
 ```
@@ -169,7 +175,7 @@ summary_holc <- la_red_ej_join %>%
 
 #### Join data. Filter data for making a table and graph
 ```{r}
-# Spatial join data 
+# Spatial join data la_red with los_ang_county using within
 joined_data <- st_join(los_ang_county, la_red, join = st_within)
 
 # Filter, Select and summarize columns for mean. Group by grade
@@ -257,7 +263,7 @@ head(joined_birds, 10)
 
 A figure summarizing the percent of observations within redlined neighborhoods within each HOLC grade
 ```{r}
-# Filter data for year 2022, group by grade, exclude NA's, summarise the count of grade, mutate a new column with percent of bird observations by grade, select only the columns grade and bird grade pct for plot, drop geometry.
+# Filter data for year 2022, group by grade, exclude NA's, summarise the count of grade, mutate a new column with percent of bird observations by grade, select only the columns grade and bird grade pct for plot, drop geometry
 holc_birds <- joined_birds %>%
   filter(year == 2022) %>%
   group_by(grade) %>% 
@@ -268,22 +274,31 @@ holc_birds <- joined_birds %>%
   st_drop_geometry()
 
 # Use ggplot to make to plot "Percentage of Total Bird Observations Within HOLC Grades"
-plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) + 
+plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("A" = "#95A472", 
                                "B" = "#005E7C", 
                                "C" = "#FFA400", 
                                "D" = "#A31621")) +
   labs(title = "Percentage of Total Bird Observations Within HOLC Grades", 
-       x = "HOLC Grade", 
+       x = "", 
        y = "Bird Grade Percentage",
-       fill = "Grade") +  
+       fill = "HOLC Grade") +  
   theme_minimal() +
   theme(axis.title.y = element_text(size = 11),
         legend.position = "none",
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5)) 
+# The code below was used in plot1for creating the animation gif but needs to be removed for patchwork. For transparency, I am including it but # it out
 
-print(plot1)
+# + transition_states(grade, transition_length = 2, state_length = 1) +
+  # enter_fade() +
+  # exit_fade()
+
+# Use gganimate to create an animated bar graph and save! # out the animate used to create the gif for rendering. Leaving code in for transparency 
+
+# animate(plot1, nframes = 100, fps = 10, width = 800, height = 600, renderer = gifski_renderer("animated_bar.gif"))
+
+knitr::include_graphics("animated_bar.gif")
 ```
 
 #### A brief paragraph explaining whether these results match the findings from Ellis-Soto et al. 2023
@@ -291,13 +306,15 @@ print(plot1)
 When you look the plot for "Percentage of Total Bird Observations Within HOLC Grades" it appears that bird observations actually increase as you move down from HOLC Grades A-D. Meaning, the riskier the real estate investment (i.e. redlined neighborhoods with high minority populations) the more birds you observe. This seems completely opposite to the findings of Ellis-Soto (shown in the image below), who showed bird density decreased from HOLC A to HOLC D, with D being the lowest density. 
 
 ```{r}
+# Use knitr to include image from Ellis-Soto study
 knitr::include_graphics("kuifbw1h.png")
 ```
 
-The reason for this comes down to area. If you look at the map you will see that C and D make up a larger portion of the HOLC map than grades A and B. This leads to more bird observations simply because you have more area to see more birds. You can account for this by taking the total bird count for each grade and dividing it by the total area for each grade, giving you a more accurate value.
+One reason for this could be area. If you look at the map you will see that C and D make up a larger portion of the HOLC map than grades A and B. This leads to more bird observations simply because you have more area to see more birds. You can account for this by taking the total bird count for each grade and dividing it by the total area for each grade, giving you a more accurate value.
 
-#### Filter a new data set that includes total area and count of bird observations  for each HOLC grade 
+#### Filter a new data set that includes total area and count of bird observations for each HOLC grade 
 ```{r}
+# Filter joined data for 2022 and exclude NA's, group by grade and summarise total area and grade count, mutate a new column called bird_count_area that calculates grade divided by total area, select columns grade and bird_count_area, drop geometry.
 pct_bird_obs_area <- joined_birds %>%
   filter(year == 2022, (grade != "NA")) %>%
   group_by(grade) %>% 
@@ -309,8 +326,9 @@ pct_bird_obs_area <- joined_birds %>%
   st_drop_geometry()
 ```
 
-#### Create a new plot with filtered HOLC grade and area
+#### Create a new plot with filtered HOLC grade and area, combined the plots for comparison
 ```{r}
+# Use ggplot to plot "Bird Observations by Area in HOLC Grades"
 plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = grade)) + 
   geom_bar(stat = "identity") +
   scale_fill_manual(values = c("A" = "#95A472", 
@@ -318,9 +336,9 @@ plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = gr
                                "C" = "#FFA400", 
                                "D" = "#A31621")) +
   labs(title = "Bird Observations by Area in HOLC Grades", 
-       x = "HOLC Grade", 
+       x = "", 
        y = "Birds Obsevered by Area",
-       fill = "Grade") +  
+       fill = "HOLC Grade") +  
   theme_minimal() +
   theme(axis.title.y = element_text(size = 11),
         legend.position = "bottom",
@@ -335,9 +353,10 @@ plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = gr
 
 #### Combined the plots for comparison
 ```{r}
+# Use patchwork to combine plots and save it as new variable 
 combined_plots <- patchwork::wrap_plots(plot1, plot2, ncol = 1,
                       axes = 'collect')
-
+# Print
 print(combined_plots)
 ```
 
