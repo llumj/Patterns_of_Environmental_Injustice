@@ -183,16 +183,15 @@ holc_mean_filter <- joined_data %>%
   filter(!is.na(grade)) %>%
   select(LOWINCPCT, 
          P_PM25, 
-         LIFEEXPPCT, 
+         P_LIFEEXPPCT, 
          grade) %>%
   group_by(grade) %>% 
   summarise(across(c(LOWINCPCT, 
                      P_PM25, 
-                     LIFEEXPPCT), 
+                     P_LIFEEXPPCT), 
                    list(mean = ~ round(mean(.x, na.rm = TRUE), 2)),
                         .names = "mean_{col}")) %>%
-  mutate(mean_LOWINCPCT = mean_LOWINCPCT * 100) %>%
-  mutate(mean_LIFEEXPPCT = mean_LIFEEXPPCT * 100) %>% 
+  mutate(mean_LOWINCPCT = mean_LOWINCPCT * 100) %>% 
   st_drop_geometry()
 ```
 
@@ -200,7 +199,7 @@ holc_mean_filter <- joined_data %>%
 ```{r}
 # Gather data into long format
 long_data_holc_mean <- holc_mean_filter %>%
-  pivot_longer(cols = c(mean_LOWINCPCT, mean_P_PM25, mean_LIFEEXPPCT), names_to = "variable", values_to = "value")
+  pivot_longer(cols = c(mean_LOWINCPCT, mean_P_PM25, mean_P_LIFEEXPPCT), names_to = "variable", values_to = "value")
 
 # Create the bar graph
 holc_bar_mean <- ggplot(long_data_holc_mean, 
@@ -211,9 +210,9 @@ holc_bar_mean <- ggplot(long_data_holc_mean,
   scale_fill_manual(
     values = c("mean_P_PM25" = "#388697", 
                "mean_LOWINCPCT" = "#08415C", 
-               "mean_LIFEEXPPCT" = "#B5FFE1"),
+               "mean_P_LIFEEXPPCT" = "#B5FFE1"),
     labels = c("mean_P_PM25" = "Mean Percentile PM 2.5", 
-               "mean_LIFEEXPPCT" = "Mean % Low Life Expectency", 
+               "mean_P_LIFEEXPPCT" = "Mean Percentile Low Life Expectency", 
                "mean_LOWINCPCT" = "Mean % Low Income")) +
   labs(title = "Environmental and Social Conditions Across HOLC Grades", 
        x = "Grade", 
@@ -286,17 +285,18 @@ plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) +
        fill = "HOLC Grade") +  
   theme_minimal() +
   theme(axis.title.y = element_text(size = 11),
-        legend.position = "none",
         plot.title = element_text(hjust = 0.5)) 
 # The code below was used in plot1for creating the animation gif but needs to be removed for patchwork. For transparency, I am including it but # it out
 
-# + transition_states(grade, transition_length = 2, state_length = 1) +
-  # enter_fade() +
-  # exit_fade()
+# + transition_states(grade, transition_length = 1, state_length = 1) +
+  # enter_grow() +
+  # shadow_mark() +
+  # ease_aes('linear')
 
 # Use gganimate to create an animated bar graph and save! # out the animate used to create the gif for rendering. Leaving code in for transparency 
 
 # animate(plot1, nframes = 100, fps = 10, width = 800, height = 600, renderer = gifski_renderer("animated_bar.gif"))
+
 
 knitr::include_graphics("animated_bar.gif")
 ```
@@ -341,11 +341,6 @@ plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = gr
        fill = "HOLC Grade") +  
   theme_minimal() +
   theme(axis.title.y = element_text(size = 11),
-        legend.position = "bottom",
-        legend.justification = c(1, 1),
-        legend.box.just = "bottom",
-        legend.box.margin = margin(t = 1, b = 0, r = 1, l = 0),
-        legend.location = "panel",
         plot.title = element_text(hjust = 0.5)
   )
 
@@ -355,7 +350,7 @@ plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = gr
 ```{r}
 # Use patchwork to combine plots and save it as new variable 
 combined_plots <- patchwork::wrap_plots(plot1, plot2, ncol = 1,
-                      axes = 'collect')
+                      guides = 'collect')
 # Print
 print(combined_plots)
 ```
