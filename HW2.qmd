@@ -19,6 +19,8 @@ editor_options:
 #### Load Packages and Read Data
 
 ```{r}
+#| code-fold: false
+
 library(sf)
 library(tidyverse)
 library(tmap)
@@ -27,31 +29,39 @@ library(kableExtra)
 library(here)
 library(dplyr)
 library(tidyr)
+library(patchwork)
+library(knitr)
 ```
 
 #### Read in data
 ```{r}
 # Read in data with here
-la_red <- st_read(here::here("data", "mapping-inequality", "mapping-inequality-los-angeles.json")) %>% 
+la_red <- st_read(here::here("data", "mapping-inequality", "mapping-inequality-los-angeles.json"), quiet = TRUE) %>% 
   st_make_valid()
 
 # Read in bird biodiversity data
-birds <- st_read(here::here("data", "gbif-birds-LA", "gbif-birds-LA.shp"))
+birds <- st_read(here::here("data", "gbif-birds-LA", "gbif-birds-LA.shp"), quiet = TRUE)
 
 # Read in ejscreen data
-ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"))
+ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"), quiet = TRUE)
 
 ```
 
 #### Check the coordinate system 
 ```{r}
-# Use st_crs to check coordinate systems 
-st_crs(birds) == st_crs(la_red)
-st_crs(la_red) == st_crs(ejscreen)
-st_crs(ejscreen) == st_crs(birds)
+#| warning: true
+# Create a vector with the CRSs
+crs_vector <- c(st_crs(ejscreen), st_crs(la_red), st_crs(birds))
+
+# Check if all CRSs are equal to each other
+if (length(unique(crs_vector)) > 1) {
+  warning("Warning: Not all CRSs are equal! Consider transforming the data")
+} else {
+  print("All good: All CRSs match")
+}
 ```
 
-#### Transform coordinate system to match 
+#### Transform coordinate system for ejscreen to match la_red
 ```{r}
 # Transform la_red to match ejscreen coordinate system 
 ejscreen <- st_transform(ejscreen, crs = st_crs(la_red))
@@ -59,10 +69,14 @@ ejscreen <- st_transform(ejscreen, crs = st_crs(la_red))
 
 #### Check the coordinate system again 
 ```{r}
-# Use st_crs to check coordinate systems 
-st_crs(birds) == st_crs(la_red)
-st_crs(la_red) == st_crs(ejscreen)
-st_crs(ejscreen) == st_crs(birds)
+#| warning: true
+
+# Check if all CRSs are equal to each other
+if (length(unique(crs_vector)) > 1) {
+  warning("Warning: Not all CRSs are equal! Consider transforming the data")
+} else {
+  print("All good: All CRSs match")
+}
 ```
 
 #### Filter ejscreen data counties that make our base map
@@ -81,45 +95,70 @@ san_bern_county <- ejscreen %>%
 #### Make a map of neighborhoods colored by HOLC grades
 ```{r}
 # Use tmap package to make holc map
-holc_map_la <- tm_shape(los_ang_county, bbox = la_red) +
-  tm_polygons(col = "white") +
+holc_map_la <- tm_shape(los_ang_county, 
+                        bbox = la_red) +
+  tm_polygons(border.col = "black",
+              col = "seashell") +
   tm_shape(la_red) + 
-  tm_polygons("grade", palette = c("#B3E4FF", "#02B0C0","#FDE996","#FE9F6C"), title = "HOLC Grade") +
+  tm_polygons("grade", palette = c("#95A472", 
+                                   "#005E7C",
+                                   "#FFA400",
+                                   "#A31621"), 
+              title = "HOLC Grade",
+              border.alpha = .4,
+              border.col = "black",
+              alpha = .7) +
   tm_shape(san_bern_county) +
-  tm_polygons(col = "white") +
+  tm_polygons(border.alpha = .1,
+              col = "seashell") +
   tm_shape(orange_county) +
-  tm_polygons(col = "white") +
+  tm_polygons(border.alpha = .1,
+              col = "seashell") +
   tm_layout(
     title = "HOLC Grades Within LA County",
     title.fontfamily = "serif",
     title.fontface = "bold",
-    title.position = c(.61, .95),
-    legend.title.size = .9,
-    legend.text.size = .4,
-    legend.position = c(".05", "05"),
+    title.size = 1,
+    title.position = c("right", "top"),
+    legend.title.size = 1,
+    legend.text.size = .8,
+    legend.position = c("LEFT", "bottom"),
     legend.bg.color = NA,
-    legend.bg.alpha = .7,
-    bg.color = "white")
-
+    bg.color = "seashell") +
+  tm_scale_bar(position = c("RIGHT", "BOTTOM"), 
+               text.size = 0.5
+               ) +
+  tm_compass(type = "8star",
+             position = c("LEFT", .3),
+             size = 2
+             )
 print(holc_map_la)
+
 ```
 
 #### A table summarizing the percent of current census block groups within each HOLC grade (or none)
 
-```{r, eval}
+```{r}
+# Join la_red and los_ang_county data wiith with st_intersects to see what percentage of current census block groups are within each HOLC grade 
+la_red_ej_join <- st_join(los_ang_county, la_red, st_intersects, left = FALSE)
+
+
 # Calculate the percent of census block groups within each HOLC grade
-summary_holc <- la_red %>%
+summary_holc <- la_red_ej_join %>%
   group_by(grade) %>%
   summarise(count = n()) %>%
-  mutate(percent = round((count / sum(count)) * 100, 2)) %>%
+  mutate(percent = round((count / sum(count)) * 100, 0)) %>%
   st_drop_geometry() %>%
   select(-count)
 
 # Create the table with kableExtra
   knitr::kable(summary_holc,
-        col.names = c("HOLC Grade", "% of Census Block"),
+        col.names = c("HOLC Grade", "% of Current Census Block"),
         format = "markdown",
-        caption = "Percentage of Current Census Block Groups Within HOLC Grade")
+        caption = "Percentage of Current Census Block Groups Within HOLC Grade") %>% 
+    kable_styling(full_width = FALSE,
+                  position = "center")
+     
 
 ```
 
@@ -136,9 +175,14 @@ joined_data <- st_join(los_ang_county, la_red, join = st_within)
 # Filter, Select and summarize columns for mean. Group by grade
 holc_mean_filter <- joined_data %>% 
   filter(!is.na(grade)) %>%
-  select(LOWINCPCT, D5_PM25, LIFEEXPPCT, grade) %>%
+  select(LOWINCPCT, 
+         P_PM25, 
+         LIFEEXPPCT, 
+         grade) %>%
   group_by(grade) %>% 
-  summarise(across(c(LOWINCPCT, D5_PM25, LIFEEXPPCT), 
+  summarise(across(c(LOWINCPCT, 
+                     P_PM25, 
+                     LIFEEXPPCT), 
                    list(mean = ~ round(mean(.x, na.rm = TRUE), 2)),
                         .names = "mean_{col}")) %>%
   mutate(mean_LOWINCPCT = mean_LOWINCPCT * 100) %>%
@@ -150,29 +194,44 @@ holc_mean_filter <- joined_data %>%
 ```{r}
 # Gather data into long format
 long_data_holc_mean <- holc_mean_filter %>%
-  pivot_longer(cols = c(mean_LOWINCPCT, mean_D5_PM25, mean_LIFEEXPPCT), names_to = "variable", values_to = "value")
+  pivot_longer(cols = c(mean_LOWINCPCT, mean_P_PM25, mean_LIFEEXPPCT), names_to = "variable", values_to = "value")
 
 # Create the bar graph
-holc_map_mean <- ggplot(long_data_holc_mean, aes(x = grade, y = value, fill = variable)) +
+holc_bar_mean <- ggplot(long_data_holc_mean, 
+                        aes(x = grade, 
+                            y = value, 
+                            fill = variable)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(
-    values = c("mean_D5_PM25" = "#388697", "mean_LOWINCPCT" = "#08415C", "mean_LIFEEXPPCT" = "#B5FFE1"),
-    labels = c("mean_D5_PM25" = "Mean Percent PM 2.5", "mean_LIFEEXPPCT" = "Mean Percent Low Life Expectency", "mean_LOWINCPCT" = "Mean % Low Income")) +
-  labs(title = "Environmental and Social Conditions Across HOLC Grades", x = "Grade", y = "Percentage") +
+    values = c("mean_P_PM25" = "#388697", 
+               "mean_LOWINCPCT" = "#08415C", 
+               "mean_LIFEEXPPCT" = "#B5FFE1"),
+    labels = c("mean_P_PM25" = "Mean Percentile PM 2.5", 
+               "mean_LIFEEXPPCT" = "Mean % Low Life Expectency", 
+               "mean_LOWINCPCT" = "Mean % Low Income")) +
+  labs(title = "Environmental and Social Conditions Across HOLC Grades", 
+       x = "Grade", 
+       y = "Percentage/Percentile") +
   theme_minimal() + 
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5))
 
 # Print
-print(holc_map_mean)
+print(holc_bar_mean)
 ```
 
 #### Create table of mean values with kable
 ```{r}
+# First I want to round my P_PM25 column to have the same sig-figs as my other two columns 
+holc_mean_filter$mean_P_PM25 <- round(holc_mean_filter$mean_P_PM25, 0)
+
 # Create mean table with kableExtra
   kable(holc_mean_filter,
         caption = "Environmental and Social Conditions Across HOLC Grades",
-        col.names = c("Grade", "Mean % Low Income", "Mean Percent PM25", "Mean Percent Low Life Expectency"),
-        format = "markdown")  
+        col.names = c("Grade", "Mean % Low Income", 
+                      "Mean Percent PM25", 
+                      "Mean Percent Low Life Expectency"),
+        format = "markdown")
 
 ```
 
@@ -182,7 +241,103 @@ The table shows each Grades A-D, a rating system ranked from best to poorest bas
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
+#### Combine data from la_red and birds by geometry
 ```{r}
+# Use st_join to combine la_red data to birds
+joined_birds <- st_join(birds, la_red, join = st_within, left = TRUE)
+```
 
+#### Check first 10 rows of data with head (Hiding from HTML)
+```{r, eval=FALSE}
+# print first 10 lines to check for grade 
+head(joined_birds, 10)
+```
+
+#### Produce the following based on observations from 2022:
+
+A figure summarizing the percent of observations within redlined neighborhoods within each HOLC grade
+```{r}
+# Filter data for year 2022, group by grade, exclude NA's, summarise the count of grade, mutate a new column with percent of bird observations by grade, select only the columns grade and bird grade pct for plot, drop geometry.
+holc_birds <- joined_birds %>%
+  filter(year == 2022) %>%
+  group_by(grade) %>% 
+  filter(grade != "NA") %>%
+  summarise(count_id = n()) %>%
+  mutate(bird_grade_pct = round(count_id/sum(count_id) * 100),2) %>%
+  select(grade, bird_grade_pct) %>% 
+  st_drop_geometry()
+
+# Use ggplot to make to plot "Percentage of Total Bird Observations Within HOLC Grades"
+plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("A" = "#95A472", 
+                               "B" = "#005E7C", 
+                               "C" = "#FFA400", 
+                               "D" = "#A31621")) +
+  labs(title = "Percentage of Total Bird Observations Within HOLC Grades", 
+       x = "HOLC Grade", 
+       y = "Bird Grade Percentage",
+       fill = "Grade") +  
+  theme_minimal() +
+  theme(axis.title.y = element_text(size = 11),
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5))
+
+print(plot1)
+```
+
+#### A brief paragraph explaining whether these results match the findings from Ellis-Soto et al. 2023
+
+When you look the plot for "Percentage of Total Bird Observations Within HOLC Grades" it appears that bird observations actually increase as you move down from HOLC Grades A-D. Meaning, the riskier the real estate investment (i.e. redlined neighborhoods with high minority populations) the more birds you observe. This seems completely opposite to the findings of Ellis-Soto (shown in the image below), who showed bird density decreased from HOLC A to HOLC D, with D being the lowest density. 
+
+```{r}
+knitr::include_graphics("kuifbw1h.png")
+```
+
+The reason for this comes down to area. If you look at the map you will see that C and D make up a larger portion of the HOLC map than grades A and B. This leads to more bird observations simply because you have more area to see more birds. You can account for this by taking the total bird count for each grade and dividing it by the total area for each grade, giving you a more accurate value.
+
+#### Filter a new data set that includes total area and count of bird observations  for each HOLC grade 
+```{r}
+pct_bird_obs_area <- joined_birds %>%
+  filter(year == 2022, (grade != "NA")) %>%
+  group_by(grade) %>% 
+  summarise(
+    total_area = sum(area, na.rm = TRUE),
+    grade_count = n()) %>%
+  mutate(bird_count_area = grade_count/total_area) %>%
+  select(grade, bird_count_area) %>% 
+  st_drop_geometry()
+```
+
+#### Create a new plot with filtered HOLC grade and area
+```{r}
+plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = grade)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("A" = "#95A472", 
+                               "B" = "#005E7C", 
+                               "C" = "#FFA400", 
+                               "D" = "#A31621")) +
+  labs(title = "Bird Observations by Area in HOLC Grades", 
+       x = "HOLC Grade", 
+       y = "Birds Obsevered by Area",
+       fill = "Grade") +  
+  theme_minimal() +
+  theme(axis.title.y = element_text(size = 11),
+        legend.position = "bottom",
+        legend.justification = c(1, 1),
+        legend.box.just = "bottom",
+        legend.box.margin = margin(t = 1, b = 0, r = 1, l = 0),
+        legend.location = "panel",
+        plot.title = element_text(hjust = 0.5)
+  )
+
+```
+
+#### Combined the plots for comparison
+```{r}
+combined_plots <- patchwork::wrap_plots(plot1, plot2, ncol = 1,
+                      axes = 'collect')
+
+print(combined_plots)
 ```
 
