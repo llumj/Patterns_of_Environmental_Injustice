@@ -32,6 +32,7 @@ library(tidyr)
 library(patchwork)
 library(knitr)
 library(gganimate)
+library(grid)
 ```
 
 #### Read in data
@@ -89,22 +90,26 @@ if (!(st_crs(ejscreen) == st_crs(birds) &
 ```{r}
 # Use filter to filter data for LA, Orange, and San Bernardino Counties 
 los_ang_county <- ejscreen %>%
-filter(CNTY_NAME == "Los Angeles County")
+  filter(CNTY_NAME == "Los Angeles County")
 
 orange_county <- ejscreen %>% 
   filter(CNTY_NAME == "Orange County")
 
 san_bern_county <- ejscreen %>% 
   filter(CNTY_NAME == "San Bernardino County")
+
+california <- ejscreen %>% 
+  filter(STATE_NAME == "California")
+
 ```
 
 #### Make a map of neighborhoods colored by HOLC grades
-```{r}
+```{r, fig.width=10, fig.height=8}
 # Use tmap package to make holc map
-holc_map_la <- tm_shape(los_ang_county, 
+main_map <- tm_shape(los_ang_county, 
                         bbox = la_red) +
   tm_polygons(border.col = "black",
-              col = "seashell") +
+              col = "seashell1") +
   tm_shape(la_red) + 
   tm_polygons("grade", palette = c("#95A472", 
                                    "#005E7C",
@@ -116,34 +121,60 @@ holc_map_la <- tm_shape(los_ang_county,
               alpha = .7) +
   tm_shape(san_bern_county) +
   tm_polygons(border.alpha = .1,
-              col = "seashell") +
+              col = "seashell1") +
   tm_shape(orange_county) +
   tm_polygons(border.alpha = .1,
-              col = "seashell") +
+              col = "seashell1") +
   tm_layout(
-    title = "HOLC Grades Within LA County",
-    title.fontfamily = "serif",
+    title = "Los Angeles County",
+    title.fontfamily = "fantasy",
     title.fontface = "bold",
-    title.size = 1,
-    title.position = c("right", "top"),
-    legend.title.size = 1,
-    legend.text.size = .8,
-    legend.position = c("LEFT", "bottom"),
+    title.size = 2,
+    title.position = c(.63, "top"),
+    legend.title.size = 1.7,
+    legend.text.size = 1.2,
+    legend.position = c("LEFT", .067),
     legend.bg.color = NA,
-    bg.color = "seashell") +
+    bg.color = "seashell1") +
   tm_scale_bar(position = c("RIGHT", "BOTTOM"), 
                text.size = 0.5
                ) +
   tm_compass(type = "8star",
-             position = c("LEFT", .3),
-             size = 2
-             )
-print(holc_map_la)
+             position = c("left", .3),
+             size = 4
+             ) + 
+  tm_credits("Historical Redlined Districts",
+             size = 1,
+             fontfamily = "fantasy",
+             fontface = "bold",
+             position = c(.67, .895))
 
+# I used tmap_options to fix an issue when using my filtered California geometry data. According to stake overflow, it fixes invalid geometries
+tmap_options(check.and.fix = TRUE)
+
+# Set my bbox for the rectangle I will use to highlight my focus area within California 
+bbox_la_red <- st_bbox(la_red)
+
+# Create a polygon for the rectangle. St_as_sfc uses my bbox area, set by la_red, to a polygon
+rect_la_red <- st_as_sfc(bbox_la_red)
+
+# Create an inset map 
+inset_map <- tm_shape(california) + 
+  tm_polygons(border.col = "black", border.alpha = .1, col = "seashell1") + 
+  tm_shape(rect_la_red) + 
+  tm_borders(col = "red", lwd = 2) + 
+  tm_layout(bg.color = "seashell1")
+
+
+# Print the main map that the inset will sit on 
+print(main_map)
+
+# Use viewport to create a small map or "window", print the inset map and set vp = vp to use the saved viewing window
+vp <- viewport(x = 0.75, y = 0.26, width = 0.33, height = 0.33, just = c(.29, .6))
+print(inset_map, vp = vp)
 ```
 
 #### A table summarizing the percent of current census block groups within each HOLC grade (or none)
-
 ```{r}
 # Join la_red and los_ang_county data with st_intersects to see what percentage of current census block groups are within each HOLC grade 
 la_red_ej_join <- st_join(los_ang_county, la_red, st_intersects, left = FALSE)
