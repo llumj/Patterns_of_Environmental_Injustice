@@ -104,7 +104,7 @@ california <- ejscreen %>%
 ```
 
 #### Make a map of neighborhoods colored by HOLC grades
-```{r, fig.width=10, fig.height=8}
+```{r, fig.width=10, fig.height=8, fig.align='center'}
 # Use tmap package to make holc map
 main_map <- tm_shape(los_ang_county, 
                         bbox = la_red) +
@@ -227,7 +227,7 @@ holc_mean_filter <- joined_data %>%
 ```
 
 #### Make data long and plot it with geom_bar
-```{r}
+```{r, fig.align='center'}
 # Gather data into long format
 long_data_holc_mean <- holc_mean_filter %>%
   pivot_longer(cols = c(mean_LOWINCPCT, mean_P_PM25, mean_P_LIFEEXPPCT), names_to = "variable", values_to = "value")
@@ -315,8 +315,11 @@ plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) +
        y = "Bird Grade Percentage",
        fill = "HOLC Grade") +  
   theme_minimal() +
-  theme(axis.title.y = element_text(size = 11),
-        plot.title = element_text(hjust = 0.5)) 
+  theme(axis.title.y = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5, size = 17),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14)
+  )
 # The code below was used in plot1for creating the animation gif but needs to be removed for patchwork. For transparency, I am including it but # it out
 
 # + transition_states(grade, transition_length = 1, state_length = 1) +
@@ -336,7 +339,7 @@ knitr::include_graphics("animated_bar.gif")
 
 When you look the plot for "Percentage of Total Bird Observations Within HOLC Grades" it appears that bird observations actually increase as you move down from HOLC Grades A-D. Meaning, the riskier the real estate investment (i.e. redlined neighborhoods with high minority populations) the more birds you observe. This seems completely opposite to the findings of Ellis-Soto (shown in the image below), who showed bird density decreased from HOLC A to HOLC D, with D being the lowest density. 
 
-```{r}
+```{r, fig.align='center'}
 # Use knitr to include image from Ellis-Soto study
 knitr::include_graphics("kuifbw1h.png")
 ```
@@ -371,14 +374,16 @@ plot2 <- ggplot(pct_bird_obs_area, aes(x = grade, y = bird_count_area, fill = gr
        y = "Birds Obsevered by Area",
        fill = "HOLC Grade") +  
   theme_minimal() +
-  theme(axis.title.y = element_text(size = 11),
-        plot.title = element_text(hjust = 0.5)
+  theme(axis.title.y = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5, size = 17),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14)
   )
 
 ```
 
 #### Combined the plots for comparison
-```{r}
+```{r, fig.align='center', fig.width=10, fig.height=8}
 # Use patchwork to combine plots and save it as new variable 
 combined_plots <- patchwork::wrap_plots(plot1, plot2, ncol = 1,
                       guides = 'collect')
