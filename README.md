@@ -6,10 +6,16 @@ About-
 Redlining is a loaning practice from the 1930’s Home Owners’ Loan Corporation (HOLC), brought on as a part of the New Deal. This repository aims to analyze the impact of redlining on observations of biodiversity, specifically birds. 
 
 Repository Structure-
-data/: Data will be hidden in .gitignore because it is too large to push
-files: qmd, html with analysis of bird observations within HOLC
-README.md: Overview of the repository and instructions for use.
 
+HOLC_Injustice
+│   README.md
+│   HOLC_Injustice.qmd
+│   Rmd/Proj files    
+│
+└───data
+     └───ejscreen
+     └───gbif-birds-LA
+     └───mapping-inequality
 Data-
 Data from the United States Environmental Protection Agency’s EJScreen: Environmental Justice Screening and Mapping Tool. EJScreen provides environmental and demographic information for the US at the Census tract and block group levels, it has been downloaded from the EPA website.
 
