@@ -1,6 +1,6 @@
 ---
-title: "Homework Assignment #2"
-subtitle: "Exploring patterns of environmental justice"
+title: "Environmental Justice and Biodiversity"
+subtitle: "Exploring the Legacy of Redlining in US Cities and Its Impact on Biodiversity"
 author: "Joshua Mull"
 date: last-modified
 execute:
@@ -14,7 +14,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Part 1: Legacy of redlining in current environmental (in)justice
+## Objective: Explore historical redlining in Los Angeles and its legacy on present-day environmental justice 
 
 #### Load Packages and Read Data
 
@@ -271,7 +271,7 @@ holc_mean_filter$mean_P_PM25 <- round(holc_mean_filter$mean_P_PM25, 0)
 
 ```
 
-#### A paragraph reflecting on these results
+#### Interpretation
 
 The table shows each Grades A-D, a rating system ranked from best to poorest based on their perceived safety for real estate investment. The table shows a clear connection between the three means we selected. As the grade decreases from A to D, the mean percentage of low income, percentile of PM 2.5, percent of the population with a low life expectancy all go up. This shows that neighborhoods in the D sections, almost always occupied by minorities, suffered in all of these categories due to redlining. 
 
@@ -335,13 +335,13 @@ plot1 <- ggplot(holc_birds, aes(x = grade, y = bird_grade_pct, fill = grade)) +
 knitr::include_graphics("animated_bar.gif")
 ```
 
-#### A brief paragraph explaining whether these results match the findings from Ellis-Soto et al. 2023
+#### Why These Results may differ from 
 
 When you look the plot for "Percentage of Total Bird Observations Within HOLC Grades" it appears that bird observations actually increase as you move down from HOLC Grades A-D. Meaning, the riskier the real estate investment (i.e. redlined neighborhoods with high minority populations) the more birds you observe. This seems completely opposite to the findings of Ellis-Soto (shown in the image below), who showed bird density decreased from HOLC A to HOLC D, with D being the lowest density. 
 
 ```{r, fig.align='center'}
 # Use knitr to include image from Ellis-Soto study
-knitr::include_graphics("kuifbw1h.png")
+knitr::include_graphics("Ellis_Soto.png")
 ```
 
 One reason for this could be area. If you look at the map you will see that C and D make up a larger portion of the HOLC map than grades A and B. This leads to more bird observations simply because you have more area to see more birds. You can account for this by taking the total bird count for each grade and dividing it by the total area for each grade, giving you a more accurate value.
@@ -391,3 +391,15 @@ combined_plots <- patchwork::wrap_plots(plot1, plot2, ncol = 1,
 print(combined_plots)
 ```
 
+#### Interpretation 
+
+When area of each HOLC grade is accounted for, total bird observations were more on par with the findings of Ellis Soto. Meaning, these communities are still feeling the impacts of century old legislation. 
+
+
+#### Data Citations
+
+1. United States Environmental Protection Agency. (2024). *Purposes and Uses of EJSCREEN*. EPA.gov. Retrieved from [https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen](https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen)
+
+2. University of Richmond Digital Scholarship Lab. (2024). *Mapping Inequality: Redlining in New Deal America*. Retrieved from [https://dsl.richmond.edu/panorama/redlining/data](https://dsl.richmond.edu/panorama/redlining/data)
+
+3. EDS 223 Geospatial Analysis. (2024). *Assignments - gbif.org*. Retrieved from [https://eds-223-geospatial.github.io/assignments/gbif.org](https://eds-223-geospatial.github.io/assignments/gbif.org)

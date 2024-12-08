@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Joshua Mull">
-<meta name="dcterms.date" content="2024-10-23">
+<meta name="dcterms.date" content="2024-12-07">
 
-<title>Homework Assignment #2</title>
+<title>Environmental Justice and Biodiversity</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -85,7 +85,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#part-1-legacy-of-redlining-in-current-environmental-injustice" id="toc-part-1-legacy-of-redlining-in-current-environmental-injustice" class="nav-link active" data-scroll-target="#part-1-legacy-of-redlining-in-current-environmental-injustice">Part 1: Legacy of redlining in current environmental (in)justice</a></li>
+  <li><a href="#objective-explore-historical-redlining-in-los-angeles-and-its-legacy-on-present-day-environmental-justice" id="toc-objective-explore-historical-redlining-in-los-angeles-and-its-legacy-on-present-day-environmental-justice" class="nav-link active" data-scroll-target="#objective-explore-historical-redlining-in-los-angeles-and-its-legacy-on-present-day-environmental-justice">Objective: Explore historical redlining in Los Angeles and its legacy on present-day environmental justice</a></li>
   <li><a href="#part-2-legacy-of-redlining-in-biodiversity-observations" id="toc-part-2-legacy-of-redlining-in-biodiversity-observations" class="nav-link" data-scroll-target="#part-2-legacy-of-redlining-in-biodiversity-observations">Part 2: Legacy of redlining in biodiversity observations</a></li>
   </ul>
 </nav>
@@ -94,8 +94,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Homework Assignment #2</h1>
-<p class="subtitle lead">Exploring patterns of environmental justice</p>
+<h1 class="title">Environmental Justice and Biodiversity</h1>
+<p class="subtitle lead">Exploring the Legacy of Redlining in US Cities and Its Impact on Biodiversity</p>
 </div>
 
 
@@ -112,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 23, 2024</p>
+      <p class="date">December 7, 2024</p>
     </div>
   </div>
   
@@ -124,8 +124,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="part-1-legacy-of-redlining-in-current-environmental-injustice" class="level2">
-<h2 class="anchored" data-anchor-id="part-1-legacy-of-redlining-in-current-environmental-injustice">Part 1: Legacy of redlining in current environmental (in)justice</h2>
+<section id="objective-explore-historical-redlining-in-los-angeles-and-its-legacy-on-present-day-environmental-justice" class="level2">
+<h2 class="anchored" data-anchor-id="objective-explore-historical-redlining-in-los-angeles-and-its-legacy-on-present-day-environmental-justice">Objective: Explore historical redlining in Los Angeles and its legacy on present-day environmental justice</h2>
 <section id="load-packages-and-read-data" class="level4">
 <h4 class="anchored" data-anchor-id="load-packages-and-read-data">Load Packages and Read Data</h4>
 <div class="cell">
@@ -510,8 +510,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="a-paragraph-reflecting-on-these-results" class="level4">
-<h4 class="anchored" data-anchor-id="a-paragraph-reflecting-on-these-results">A paragraph reflecting on these results</h4>
+<section id="interpretation" class="level4">
+<h4 class="anchored" data-anchor-id="interpretation">Interpretation</h4>
 <p>The table shows each Grades A-D, a rating system ranked from best to poorest based on their perceived safety for real estate investment. The table shows a clear connection between the three means we selected. As the grade decreases from A to D, the mean percentage of low income, percentile of PM 2.5, percent of the population with a low life expectancy all go up. This shows that neighborhoods in the D sections, almost always occupied by minorities, suffered in all of these categories due to redlining.</p>
 </section>
 </section>
@@ -593,19 +593,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="a-brief-paragraph-explaining-whether-these-results-match-the-findings-from-ellis-soto-et-al.-2023" class="level4">
-<h4 class="anchored" data-anchor-id="a-brief-paragraph-explaining-whether-these-results-match-the-findings-from-ellis-soto-et-al.-2023">A brief paragraph explaining whether these results match the findings from Ellis-Soto et al.&nbsp;2023</h4>
+<section id="why-these-results-may-differ-from" class="level4">
+<h4 class="anchored" data-anchor-id="why-these-results-may-differ-from">Why These Results may differ from</h4>
 <p>When you look the plot for “Percentage of Total Bird Observations Within HOLC Grades” it appears that bird observations actually increase as you move down from HOLC Grades A-D. Meaning, the riskier the real estate investment (i.e.&nbsp;redlined neighborhoods with high minority populations) the more birds you observe. This seems completely opposite to the findings of Ellis-Soto (shown in the image below), who showed bird density decreased from HOLC A to HOLC D, with D being the lowest density.</p>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use knitr to include image from Ellis-Soto study</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"kuifbw1h.png"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"Ellis_Soto.png"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="kuifbw1h.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="600"></p>
+<p><img src="Ellis_Soto.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="400"></p>
 </figure>
 </div>
 </div>
@@ -674,6 +674,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+</section>
+<section id="interpretation-1" class="level4">
+<h4 class="anchored" data-anchor-id="interpretation-1">Interpretation</h4>
+<p>When area of each HOLC grade is accounted for, total bird observations were more on par with the findings of Ellis Soto. Meaning, these communities are still feeling the impacts of century old legislation.</p>
+</section>
+<section id="data-citations" class="level4">
+<h4 class="anchored" data-anchor-id="data-citations">Data Citations</h4>
+<ol type="1">
+<li><p>United States Environmental Protection Agency. (2024). <em>Purposes and Uses of EJSCREEN</em>. EPA.gov. Retrieved from <a href="https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen">https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen</a></p></li>
+<li><p>University of Richmond Digital Scholarship Lab. (2024). <em>Mapping Inequality: Redlining in New Deal America</em>. Retrieved from <a href="https://dsl.richmond.edu/panorama/redlining/data">https://dsl.richmond.edu/panorama/redlining/data</a></p></li>
+<li><p>EDS 223 Geospatial Analysis. (2024). <em>Assignments - gbif.org</em>. Retrieved from <a href="https://eds-223-geospatial.github.io/assignments/gbif.org">https://eds-223-geospatial.github.io/assignments/gbif.org</a></p></li>
+</ol>
 </section>
 </section>
 
